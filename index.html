@@ -7,8 +7,9 @@
 <style>
   :root{
     --bg:#f4f1ea; --ink:#1f2430; --muted:#5d6475; --card:#ffffff; --line:#d9d4c7;
-    --wall:#2b3142; --accent:#2f6fde; --accent-ink:#ffffff; --good:#1f8a5b; --warn:#c2410c;
+    --accent:#2f6fde; --accent-ink:#ffffff; --good:#1f8a5b; --warn:#c2410c;
     --trail:#dbe7ff; --goal:#e9a800;
+    --c-none:#1f8a5b; --c-audio:#b45309; --c-av:#9333ea;
   }
   *{box-sizing:border-box}
   html,body{margin:0;height:100%}
@@ -16,35 +17,45 @@
   #app{position:relative;max-width:960px;margin:0 auto;padding:16px;min-height:640px}
   h1{font-size:1.6rem;margin:.2em 0 .3em;letter-spacing:-.01em}
   h2{font-size:1.25rem;margin:.2em 0 .5em}
+  h3{font-size:1.02rem;margin:1.1em 0 .4em}
   p{line-height:1.5;margin:.4em 0 .8em}
+  a{color:var(--accent)}
   .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px 24px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
   .muted{color:var(--muted)}
   .small{font-size:.85rem}
-  .row{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
-  label.opt{display:flex;flex-direction:column;gap:4px;font-size:.9rem;font-weight:600}
-  select{font:inherit;padding:7px 10px;border-radius:8px;border:1px solid var(--line);background:#fff;min-width:150px}
-  .check{display:flex;gap:8px;align-items:center;font-size:.95rem}
+  .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+  .check{display:flex;gap:10px;align-items:flex-start;font-size:.95rem;line-height:1.4}
+  .check input{margin-top:3px;width:18px;height:18px}
   button{font:inherit;cursor:pointer;border-radius:10px;border:1px solid transparent;padding:10px 18px;font-weight:600}
   .btn{background:var(--accent);color:var(--accent-ink)}
   .btn:hover{filter:brightness(1.07)}
   .btn.ghost{background:#fff;color:var(--ink);border-color:var(--line)}
-  .btn:focus-visible,button:focus-visible{outline:3px solid #9ec0ff;outline-offset:2px}
-  .note{border-left:4px solid var(--goal);background:#fff9e8;padding:10px 14px;border-radius:6px;font-size:.9rem}
+  .btn.big{font-size:1.05rem;padding:12px 22px}
+  button:focus-visible{outline:3px solid #9ec0ff;outline-offset:2px}
+  .note{border-left:4px solid var(--goal);background:#fff9e8;padding:10px 14px;border-radius:6px;font-size:.92rem;margin:12px 0}
+  .note.blue{border-color:var(--accent);background:#eef4ff}
   .hidden{display:none !important}
+  .tag{display:inline-block;border-radius:999px;padding:2px 10px;font-size:.8rem;font-weight:700;color:#fff;white-space:nowrap}
+  .tag.none{background:var(--c-none)} .tag.audio{background:var(--c-audio)} .tag.av{background:var(--c-av)}
 
-  /* Game screen */
+  /* Plan list */
+  .plan{list-style:none;padding:0;margin:10px 0;display:grid;gap:6px}
+  .plan li{display:flex;align-items:center;gap:10px;padding:7px 10px;border:1px solid var(--line);border-radius:9px;background:#fff;font-size:.93rem}
+  .plan li .n{width:24px;height:24px;border-radius:50%;background:#eef0f4;display:grid;place-items:center;font-size:.8rem;font-weight:700;flex:none}
+  .plan li.done{opacity:.6} .plan li.done .n{background:var(--good);color:#fff}
+  .plan li.current{border-color:var(--accent);box-shadow:0 0 0 2px #cfe0ff} .plan li.current .n{background:var(--accent);color:#fff}
+  .plan li .res{margin-left:auto;font-variant-numeric:tabular-nums;color:var(--muted);font-size:.85rem}
+  .plan li.opt{border-style:dashed}
+
+  /* Game */
   #hud{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
   .pill{background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 14px;font-weight:600;font-variant-numeric:tabular-nums}
-  #roundLabel{font-weight:700}
   #stage{position:relative;display:flex;justify-content:center}
   #maze{background:#fff;border-radius:10px;border:1px solid var(--line);touch-action:none;max-width:100%}
   #maze:focus{outline:3px solid #9ec0ff;outline-offset:3px}
   #dpad{display:grid;grid-template-columns:repeat(3,56px);grid-template-rows:repeat(2,52px);gap:6px;justify-content:center;margin-top:12px}
   #dpad button{background:#fff;border:1px solid var(--line);font-size:1.3rem;padding:0}
-  #dpad .up{grid-column:2;grid-row:1}
-  #dpad .left{grid-column:1;grid-row:2}
-  #dpad .down{grid-column:2;grid-row:2}
-  #dpad .right{grid-column:3;grid-row:2}
+  #dpad .up{grid-column:2;grid-row:1} #dpad .left{grid-column:1;grid-row:2} #dpad .down{grid-column:2;grid-row:2} #dpad .right{grid-column:3;grid-row:2}
   .shake{animation:shake .18s linear}
   @keyframes shake{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
 
@@ -64,16 +75,21 @@
   #ticker span{display:inline-block;padding-left:100%;animation:tick 22s linear infinite}
   @keyframes tick{to{transform:translateX(-100%)}}
 
-  table{border-collapse:collapse;width:100%;margin:8px 0 14px;font-variant-numeric:tabular-nums}
-  th,td{border-bottom:1px solid var(--line);padding:9px 10px;text-align:left}
-  th{font-size:.85rem;color:var(--muted);font-weight:600}
-  td.num{text-align:right}
-  .delta-up{color:var(--warn);font-weight:700}
-  .delta-down{color:var(--good);font-weight:700}
-  textarea{width:100%;min-height:90px;font:inherit;padding:10px;border-radius:8px;border:1px solid var(--line)}
-  ol li{margin-bottom:6px}
+  /* Results */
+  .tablewrap{overflow-x:auto}
+  table{border-collapse:collapse;width:100%;margin:8px 0 14px;font-variant-numeric:tabular-nums;font-size:.93rem}
+  th,td{border-bottom:1px solid var(--line);padding:8px 10px;text-align:left}
+  th{font-size:.82rem;color:var(--muted);font-weight:600}
+  td.num,th.num{text-align:right}
+  .q{margin:14px 0 4px;font-weight:600;line-height:1.45}
+  textarea{width:100%;min-height:96px;font:inherit;padding:10px;border-radius:8px;border:1px solid var(--line);resize:vertical}
+  textarea:focus{outline:3px solid #cfe0ff;border-color:var(--accent)}
+  .steps{margin:6px 0 4px;padding-left:22px} .steps li{margin-bottom:6px;line-height:1.45}
+  kbd{background:#f1f2f5;border:1px solid #cfd3db;border-bottom-width:2px;border-radius:5px;padding:0 6px;font-size:.85em;font-family:inherit}
+  #copyMsg{font-weight:600}
+  .ok{color:var(--good)} .warn{color:var(--warn)}
   footer{margin-top:14px}
-  @media (prefers-reduced-motion: reduce){ .shape{transition:none} #ticker span{animation-duration:40s} #bait{animation:none} }
+  @media (prefers-reduced-motion: reduce){ #ticker span{animation-duration:40s} #bait{animation:none} }
 </style>
 </head>
 <body>
@@ -82,42 +98,43 @@
   <!-- INTRO -->
   <section id="intro" class="card">
     <h1>Distraction Maze</h1>
-    <p>Find your way from the <b style="color:var(--accent)">blue dot</b> to the <b style="color:#b07f00">gold star</b> as quickly as you can, without bumping into walls.</p>
-    <p>You'll play <b>two rounds</b> on mazes of equal difficulty: first with <b>no distractions</b>, then with <b>sounds, pop-ups, moving shapes and stray thoughts</b>. At the end you'll compare the two.</p>
-    <div class="row" style="margin:14px 0 6px">
-      <label class="opt">Maze size
-        <select id="optSize">
-          <option value="small">Small (10 × 10)</option>
-          <option value="medium" selected>Medium (14 × 14)</option>
-          <option value="large">Large (18 × 18)</option>
-        </select>
-      </label>
-      <label class="opt">Distraction level
-        <select id="optLevel">
-          <option value="low">Low</option>
-          <option value="medium" selected>Medium</option>
-          <option value="high">High</option>
-        </select>
-      </label>
+    <p>In each trial, move the <b style="color:var(--accent)">blue dot</b> to the <b style="color:#b07f00">gold star</b> as quickly as you can, without bumping into walls.</p>
+    <p>You'll complete <b>small</b> and <b>medium</b> mazes under three conditions:</p>
+    <p>
+      <span class="tag none">No distractions</span>&nbsp;
+      <span class="tag audio">Auditory distractions</span>&nbsp;
+      <span class="tag av">Auditory + visual distractions</span>
+    </p>
+    <p>Mazes of the same size are equally difficult in every condition, so you can compare your results fairly.</p>
+    <ul class="plan" id="introPlan"></ul>
+    <label class="check"><input type="checkbox" id="optLarge"> <span><b>Optional:</b> also complete the <b>large</b> maze in each condition (adds 3 trials).</span></label>
+    <div class="note">🎧 <b>Turn your sound on</b> (headphones are best). Sound is a big part of this activity. It includes moving shapes and pop-ups, but no rapid flashing.</div>
+    <p class="small muted"><b>Controls:</b> arrow keys or <kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd>. If the keys don't respond, click once on the maze. On a phone or tablet, use the arrow buttons or swipe on the maze.</p>
+    <div class="row" style="margin-top:16px">
+      <button class="btn big" id="startBtn">Begin</button>
+      <button class="btn big hidden" id="resumeBtn">Resume</button>
+      <button class="btn ghost hidden" id="restartBtn">Start over (erases saved results)</button>
     </div>
-    <div class="row" style="margin:6px 0 14px">
-      <label class="check"><input type="checkbox" id="optSkipCalm"> Skip the calm round (distractions only)</label>
-    </div>
-    <p class="small muted"><b>Controls:</b> arrow keys or W A S D. On a phone or tablet, use the arrow buttons under the maze or swipe on the maze.</p>
-    <div class="note">🎧 <b>Turn your sound on</b> — audio is part of the experience. This activity includes moving shapes and pop-ups but no rapid flashing.</div>
-    <div class="row" style="margin-top:18px">
-      <button class="btn" id="startBtn">Start round 1</button>
-    </div>
+    <p id="resumeNote" class="small muted hidden" style="margin-top:10px"></p>
     <footer class="small muted">
       This is a classroom awareness activity, not a clinical or diagnostic tool, and it can only hint at what living with ADHD is like.
       Adapted from <a href="https://github.com/sayanthsai/ADHD_simulator" target="_blank" rel="noopener">ADHD_simulator</a> by sayanthsai (CC0), including its original audio.
     </footer>
   </section>
 
+  <!-- NEXT TRIAL -->
+  <section id="next" class="card hidden">
+    <p id="lastResult" class="muted"></p>
+    <h2 id="nextTitle"></h2>
+    <p id="nextDesc"></p>
+    <ul class="plan" id="nextPlan"></ul>
+    <button class="btn big" id="trialBtn">Start trial</button>
+  </section>
+
   <!-- GAME -->
   <section id="game" class="hidden">
     <div id="hud">
-      <span id="roundLabel" class="pill">Round 1 · Calm</span>
+      <span id="roundLabel" class="pill"></span>
       <div class="row" style="gap:8px">
         <span class="pill">⏱ <span id="tTime">0.0</span>s</span>
         <span class="pill">💥 <span id="tBumps">0</span> bumps</span>
@@ -133,31 +150,41 @@
     </div>
   </section>
 
-  <!-- BETWEEN ROUNDS -->
-  <section id="between" class="card hidden">
-    <h2>Round 1 done ✅</h2>
-    <p id="r1summary"></p>
-    <p>Round 2 is a maze of the <b>same size and difficulty</b> (the same layout, mirrored). This time, distractions will start shortly after you begin. <b>Try to stay focused on the maze.</b></p>
-    <button class="btn" id="round2Btn">Start round 2</button>
-  </section>
-
   <!-- RESULTS -->
   <section id="results" class="card hidden">
     <h2>Your results</h2>
-    <table id="resTable"></table>
-    <p id="resSummary"></p>
-    <h2 style="margin-top:18px">Reflect</h2>
-    <ol>
-      <li>What did you notice about your attention when the distractions started? Which kind pulled you away most — sounds, pop-ups, moving shapes, or the "thoughts"?</li>
-      <li>Did you click the flashing button or read the notifications, even though they didn't help you finish? Why do you think that happened?</li>
-      <li>How might it feel if these interruptions came from <i>inside your own head</i> and you couldn't switch them off at the end of the activity?</li>
-      <li>What could a teacher, classmate, or workplace change to make a task like this easier for someone who is easily distracted?</li>
+    <p class="small muted">Average time for each maze size and condition:</p>
+    <div class="tablewrap"><table id="sumTable"></table></div>
+    <details>
+      <summary class="small" style="cursor:pointer">Show every trial</summary>
+      <div class="tablewrap"><table id="resTable"></table></div>
+    </details>
+    <div id="largeOffer" class="note blue hidden">
+      <b>Optional:</b> want to try the large maze in all three conditions? Your answers below are saved.
+      <div style="margin-top:8px"><button class="btn" id="addLargeBtn">Do the large mazes (3 more trials)</button></div>
+    </div>
+
+    <h2 style="margin-top:22px">Reflection questions</h2>
+    <p class="small muted">Type your answers in the boxes. They're saved in this browser as you type.</p>
+    <div id="qs"></div>
+
+    <h2 style="margin-top:22px">Submit to Canvas</h2>
+    <ol class="steps">
+      <li>Answer all four questions above.</li>
+      <li>Click <b>Copy results &amp; answers</b> below.</li>
+      <li>In Canvas, open the assignment and click <b>Start Assignment</b> (or <b>New Attempt</b>). Choose the <b>Text Entry</b> tab.</li>
+      <li>Click inside the text box and paste: <kbd>Ctrl</kbd>+<kbd>V</kbd> on Windows or Chromebook, <kbd>⌘ Cmd</kbd>+<kbd>V</kbd> on Mac. Your results table and answers will appear.</li>
+      <li>Check that everything pasted, then click <b>Submit Assignment</b>.</li>
     </ol>
-    <textarea id="notes" placeholder="Optional: jot your thoughts here, then use “Copy results” to paste everything into your assignment."></textarea>
+    <div class="note"><b>If the copy button doesn't work:</b> click <b>Download results</b>. Then in the Canvas assignment, choose the <b>File Upload</b> tab, attach the downloaded file (<i>distraction-maze-results.txt</i>), and submit.</div>
     <div class="row" style="margin-top:12px">
-      <button class="btn" id="copyBtn">Copy results</button>
-      <button class="btn ghost" id="againBtn">Play again</button>
-      <span id="copyMsg" class="small muted"></span>
+      <button class="btn big" id="copyBtn">📋 Copy results &amp; answers</button>
+      <button class="btn ghost" id="dlBtn">⬇️ Download results</button>
+    </div>
+    <p id="copyMsg" class="small" style="margin-top:10px"></p>
+    <div class="row" style="margin-top:22px">
+      <button class="btn ghost" id="againBtn">Start over (clears your results)</button>
+      <span id="againConfirm" class="small warn hidden">Click again to confirm. This erases your results and answers.</span>
     </div>
   </section>
 </div>
@@ -171,32 +198,53 @@ const AUDIO = {"1": "data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjYw
 
 (function(){
 "use strict";
-
-/* ---------- Settings ---------- */
-const SIZES = {small:10, medium:14, large:18};
-const LEVELS = {
-  //            delay before distractions, shape every, sound every, toast every, thought every, bait every, narration vol, clip vol, ticker
-  low:    {delay:4000, shape:[3500,6000], sound:[9000,14000], toast:[11000,16000], thought:[12000,18000], bait:null,          narr:0.25, clip:0.30, ticker:false},
-  medium: {delay:3000, shape:[1800,3500], sound:[6000,10000], toast:[6000,10000],  thought:[7000,11000],  bait:[14000,20000], narr:0.40, clip:0.45, ticker:false},
-  high:   {delay:2000, shape:[900,1800],  sound:[3500,6500],  toast:[3500,6500],   thought:[4000,7000],   bait:[8000,12000],  narr:0.55, clip:0.60, ticker:true}
-};
-// Teachers can preset via URL: ?size=small|medium|large&level=low|medium|high&skipcalm=1&lock=1
-const qs = new URLSearchParams(window.__PRESET__ || location.search);
 const $ = id => document.getElementById(id);
-if (SIZES[qs.get("size")]) $("optSize").value = qs.get("size");
-if (LEVELS[qs.get("level")]) $("optLevel").value = qs.get("level");
-if (qs.get("skipcalm")==="1") $("optSkipCalm").checked = true;
-if (qs.get("lock")==="1"){ $("optSize").disabled = $("optLevel").disabled = $("optSkipCalm").disabled = true; }
-
 const rand = (a,b)=> a + Math.random()*(b-a);
 const randi = (a,b)=> Math.floor(rand(a,b+1));
 const pick = arr => arr[Math.floor(Math.random()*arr.length)];
 const between = r => rand(r[0], r[1]);
+const esc = s => String(s).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 
-/* ---------- Maze generation (recursive backtracker) ---------- */
-// wall bits: N=1 E=2 S=4 W=8
-const N=1,E=2,S=4,W=8;
-const DIRS = {up:[0,-1,N,S], right:[1,0,E,W], down:[0,1,S,N], left:[-1,0,W,E]};
+/* ---------- Configuration ---------- */
+const SIZES = {small:{n:10,label:"Small"}, medium:{n:14,label:"Medium"}, large:{n:18,label:"Large"}};
+const CONDS = {
+  none: {label:"No distractions",               short:"None",            desc:"No distractions. Just you and the maze. Work as quickly and accurately as you can."},
+  audio:{label:"Auditory distractions",         short:"Auditory",        desc:"You'll hear background narration, random sound clips and notification dings. Keep your sound on and try to stay focused on the maze."},
+  av:   {label:"Auditory + visual distractions",short:"Auditory + visual",desc:"Sounds plus pop-up notifications, moving shapes, stray \"thoughts\" and tempting buttons. Try to stay focused on the maze."}
+};
+const COND_ORDER = ["none","audio","av"];
+const LEVELS = {
+  low:    {delay:3000, shape:[3500,6000], sound:[9000,14000], toast:[11000,16000], thought:[12000,18000], bait:null,          narr:0.25, clip:0.30, ticker:false},
+  medium: {delay:2500, shape:[1800,3500], sound:[6000,10000], toast:[6000,10000],  thought:[7000,11000],  bait:[14000,20000], narr:0.40, clip:0.45, ticker:false},
+  high:   {delay:2000, shape:[900,1800],  sound:[3500,6500],  toast:[3500,6500],   thought:[4000,7000],   bait:[8000,12000],  narr:0.55, clip:0.60, ticker:true}
+};
+const QUESTIONS = [
+  "What did you notice about your attention when the distractions started? Which kind pulled you away most — sounds, pop-ups, moving shapes, or the \"thoughts\"?",
+  "Did you click the flashing button or read the notifications, even though they didn't help you finish? Why do you think that happened?",
+  "How might it feel if these interruptions came from inside your own head and you couldn't switch them off at the end of the activity?",
+  "What could a teacher, classmate, or workplace change to make a task like this easier for someone who is easily distracted?"
+];
+// Teachers can set the distraction intensity via URL: ?level=low|medium|high (default medium). ?large=1 pre-ticks the large-maze option.
+const qs = new URLSearchParams(window.__PRESET__ || location.search);
+const LEVEL = LEVELS[qs.get("level")] ? qs.get("level") : "medium";
+if (qs.get("large")==="1") $("optLarge").checked = true;
+
+/* ---------- Saved session (localStorage, optional) ---------- */
+const KEY = "distractionMaze.v2";
+let S = null; // {trials:[{size,cond}], results:[...], mazes:{size:grid}, answers:[], level}
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
+function load(){ try{ return JSON.parse(localStorage.getItem(KEY)||"null"); }catch(e){ return null; } }
+function clearSaved(){ try{ localStorage.removeItem(KEY); }catch(e){} }
+
+function buildTrials(includeLarge){
+  const sizes = includeLarge ? ["small","medium","large"] : ["small","medium"];
+  const t=[]; for(const c of COND_ORDER) for(const s of sizes) t.push({size:s, cond:c}); return t;
+}
+function trialName(t){ return `${SIZES[t.size].label} maze · ${CONDS[t.cond].label}`; }
+
+/* ---------- Maze generation ---------- */
+const N=1,E=2,S_=4,W=8;
+const DIRS = {up:[0,-1,N,S_], right:[1,0,E,W], down:[0,1,S_,N], left:[-1,0,W,E]};
 function makeMaze(n){
   const g = Array.from({length:n},()=>Array(n).fill(15));
   const seen = Array.from({length:n},()=>Array(n).fill(false));
@@ -210,31 +258,49 @@ function makeMaze(n){
   }
   return g;
 }
-// Mirror across the main diagonal: same paths/difficulty, start (0,0) & goal (n-1,n-1) unchanged.
-function transposeMaze(g){
-  const n=g.length, t=Array.from({length:n},()=>Array(n).fill(0));
-  for(let y=0;y<n;y++)for(let x=0;x<n;x++){
-    const c=g[x][y]; let v=0;
-    if(c&N) v|=W; if(c&W) v|=N; if(c&S) v|=E; if(c&E) v|=S;
-    t[y][x]=v;
-  }
-  return t;
-}
+// Equal-difficulty variants of one maze. Each keeps the start top-left and the goal bottom-right,
+// and the route between them is the same length with the same dead ends; it just looks different.
+function transpose(g){ const n=g.length; return g.map((row,y)=>row.map((_,x)=>{ const c=g[x][y]; let v=0; if(c&N)v|=W; if(c&W)v|=N; if(c&S_)v|=E; if(c&E)v|=S_; return v; })); }
+function rotate180(g){ const n=g.length; return g.map((row,y)=>row.map((_,x)=>{ const c=g[n-1-y][n-1-x]; let v=0; if(c&N)v|=S_; if(c&S_)v|=N; if(c&E)v|=W; if(c&W)v|=E; return v; })); }
+const VARIANT = { none:g=>g, audio:transpose, av:g=>transpose(rotate180(g)) };
 function shortestPath(g){
   const n=g.length, dist=Array.from({length:n},()=>Array(n).fill(-1)); dist[0][0]=0; const q=[[0,0]];
   while(q.length){const [x,y]=q.shift(); for(const [dx,dy,b] of Object.values(DIRS)){ if(g[y][x]&b) continue; const nx=x+dx,ny=y+dy; if(dist[ny][nx]<0){dist[ny][nx]=dist[y][x]+1;q.push([nx,ny]);}}}
   return dist[n-1][n-1];
 }
 
-/* ---------- Game state ---------- */
-const canvas=$("maze"), ctx=canvas.getContext("2d");
-let maze=null, baseMaze=null, n=14, cell=30, player={x:0,y:0}, visited=new Set();
-let round=0, rounds=[], playing=false, t0=0, timerId=null, stats=null, skipCalm=false, level="medium";
+/* ---------- Screens ---------- */
+function show(id){ for(const s of ["intro","next","game","results"]) $(s).classList.toggle("hidden", s!==id); window.scrollTo(0,0); }
 
-function show(id){ for(const s of ["intro","game","between","results"]) $(s).classList.toggle("hidden", s!==id); }
+function planHTML(trials, results, currentIdx){
+  return trials.map((t,i)=>{
+    const r = results[i], cls = r ? "done" : (i===currentIdx ? "current" : "");
+    return `<li class="${cls} ${t.size==='large'?'opt':''}"><span class="n">${r?"✓":i+1}</span>
+      <span>${SIZES[t.size].label} maze</span> <span class="tag ${t.cond}">${CONDS[t.cond].short}</span>
+      ${t.size==='large'?'<span class="small muted">optional</span>':''}
+      <span class="res">${r? r.time.toFixed(1)+" s · "+r.bumps+" bumps" : ""}</span></li>`;
+  }).join("");
+}
+function refreshIntroPlan(){ $("introPlan").innerHTML = planHTML(buildTrials($("optLarge").checked), [], -1); }
+$("optLarge").addEventListener("change", refreshIntroPlan);
+
+function showNext(){
+  const i = S.results.length;
+  if(i >= S.trials.length){ showResults(); return; }
+  const t = S.trials[i], last = S.results[i-1];
+  $("lastResult").innerHTML = last ? `✅ Trial ${i} done: <b>${last.time.toFixed(1)} s</b>, ${last.bumps} wall bumps, ${last.moves} moves.` : "";
+  $("nextTitle").innerHTML = `Trial ${i+1} of ${S.trials.length}: ${SIZES[t.size].label} maze <span class="tag ${t.cond}">${CONDS[t.cond].label}</span>`;
+  $("nextDesc").textContent = CONDS[t.cond].desc + (t.cond!=="none" ? " 🎧 Check that your sound is on." : "");
+  $("nextPlan").innerHTML = planHTML(S.trials, S.results, i);
+  show("next"); $("trialBtn").focus();
+}
+
+/* ---------- Game ---------- */
+const canvas=$("maze"), ctx=canvas.getContext("2d");
+let maze=null, n=10, cell=30, player={x:0,y:0}, visited=new Set(), playing=false, t0=0, timerId=null, stats=null, curTrial=null;
 
 function fitCanvas(){
-  const avail = Math.min(document.getElementById("app").clientWidth - 32, window.innerHeight - 210, 640);
+  const avail = Math.min($("app").clientWidth - 32, window.innerHeight - 210, 640);
   cell = Math.max(14, Math.floor(Math.max(avail, 260) / n));
   const px = cell*n + 4, dpr = window.devicePixelRatio||1;
   canvas.style.width = px+"px"; canvas.style.height = px+"px";
@@ -245,19 +311,16 @@ function draw(){
   if(!maze) return;
   const o=2, s=cell;
   ctx.clearRect(0,0,canvas.width,canvas.height);
-  ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue("--trail");
+  ctx.fillStyle="#dbe7ff";
   for(const k of visited){ const [x,y]=k.split(",").map(Number); ctx.fillRect(o+x*s+1,o+y*s+1,s-2,s-2); }
-  // goal
   drawStar(o+(n-1)*s+s/2, o+(n-1)*s+s/2, s*0.38, s*0.16);
-  // walls
   ctx.strokeStyle="#2b3142"; ctx.lineWidth=Math.max(2, s/10); ctx.lineCap="round"; ctx.beginPath();
   for(let y=0;y<n;y++)for(let x=0;x<n;x++){
     const c=maze[y][x], X=o+x*s, Y=o+y*s;
     if(c&N){ctx.moveTo(X,Y);ctx.lineTo(X+s,Y);}  if(c&W){ctx.moveTo(X,Y);ctx.lineTo(X,Y+s);}
-    if(y===n-1&&(c&S)){ctx.moveTo(X,Y+s);ctx.lineTo(X+s,Y+s);} if(x===n-1&&(c&E)){ctx.moveTo(X+s,Y);ctx.lineTo(X+s,Y+s);}
+    if(y===n-1&&(c&S_)){ctx.moveTo(X,Y+s);ctx.lineTo(X+s,Y+s);} if(x===n-1&&(c&E)){ctx.moveTo(X+s,Y);ctx.lineTo(X+s,Y+s);}
   }
   ctx.stroke();
-  // player
   ctx.fillStyle="#2f6fde"; ctx.beginPath(); ctx.arc(o+player.x*s+s/2, o+player.y*s+s/2, s*0.32, 0, Math.PI*2); ctx.fill();
 }
 function drawStar(cx,cy,R,r){
@@ -266,19 +329,20 @@ function drawStar(cx,cy,R,r){
   ctx.closePath(); ctx.fill();
 }
 
-function startRound(r){
-  round=r; const distracted = (r===2);
-  maze = (r===2 && baseMaze) ? transposeMaze(baseMaze) : (baseMaze = makeMaze(n));
+function startTrial(){
+  const i = S.results.length; curTrial = S.trials[i];
+  n = SIZES[curTrial.size].n;
+  if(!S.mazes[curTrial.size]){ S.mazes[curTrial.size] = makeMaze(n); save(); }
+  maze = VARIANT[curTrial.cond](S.mazes[curTrial.size]);
   player={x:0,y:0}; visited=new Set(["0,0"]);
-  stats={time:0,bumps:0,moves:0,optimal:shortestPath(maze),baitClicks:0,distracted};
-  $("roundLabel").textContent = distracted ? (skipCalm ? "Distracted round" : "Round 2 · Distracted") : "Round 1 · Calm";
+  stats={time:0,bumps:0,moves:0,optimal:shortestPath(maze),baitClicks:0};
+  $("roundLabel").innerHTML = `Trial ${i+1}/${S.trials.length} · ${SIZES[curTrial.size].label} · <span class="tag ${curTrial.cond}">${CONDS[curTrial.cond].short}</span>`;
   $("tTime").textContent="0.0"; $("tBumps").textContent="0"; $("tMoves").textContent="0";
   show("game"); fitCanvas(); canvas.focus({preventScroll:true});
   playing=true; t0=performance.now();
   timerId=setInterval(()=>{ stats.time=(performance.now()-t0)/1000; $("tTime").textContent=stats.time.toFixed(1); },100);
-  if(distracted) Distractions.start(LEVELS[level]);
+  if(curTrial.cond!=="none") Distractions.start(LEVELS[LEVEL], curTrial.cond);
 }
-
 function move(dir){
   if(!playing) return;
   const [dx,dy,b]=DIRS[dir];
@@ -289,57 +353,100 @@ function move(dir){
   }
   player.x+=dx; player.y+=dy; stats.moves++; $("tMoves").textContent=stats.moves;
   visited.add(player.x+","+player.y); draw();
-  if(player.x===n-1 && player.y===n-1) finishRound();
+  if(player.x===n-1 && player.y===n-1) finishTrial();
 }
-
-function finishRound(){
+function finishTrial(){
   playing=false; clearInterval(timerId); stats.time=(performance.now()-t0)/1000;
   Distractions.stop();
-  rounds.push({...stats});
-  if(round===1){
-    $("r1summary").innerHTML = `You finished in <b>${stats.time.toFixed(1)} s</b> with <b>${stats.bumps}</b> wall bumps and <b>${stats.moves}</b> moves (shortest possible path: ${stats.optimal}).`;
-    show("between"); $("round2Btn").focus();
-  } else showResults();
+  S.results.push({size:curTrial.size, cond:curTrial.cond, time:+stats.time.toFixed(2), bumps:stats.bumps, moves:stats.moves, optimal:stats.optimal, baitClicks:stats.baitClicks});
+  save(); showNext();
 }
 
+/* ---------- Results ---------- */
+function summary(){
+  const sizes = [...new Set(S.trials.map(t=>t.size))];
+  return sizes.map(sz=>({size:sz, cells:COND_ORDER.map(c=>{ const rs=S.results.filter(r=>r.size===sz&&r.cond===c); return rs.length? rs.reduce((a,r)=>a+r.time,0)/rs.length : null; })}));
+}
 function showResults(){
-  const calm = rounds.find(r=>!r.distracted), dis = rounds.find(r=>r.distracted);
-  const rows = [["Time (seconds)","time",1],["Wall bumps","bumps",0],["Moves","moves",0],["Extra moves beyond shortest path","extra",0]];
-  rounds.forEach(r=> r.extra = r.moves - r.optimal);
-  let html = `<tr><th>Measure</th>${calm?"<th class='num'>Calm</th>":""}<th class='num'>Distracted</th>${calm?"<th class='num'>Change</th>":""}</tr>`;
-  for(const [label,key,dp] of rows){
-    html += `<tr><td>${label}</td>`;
-    if(calm) html += `<td class="num">${calm[key].toFixed(dp)}</td>`;
-    html += `<td class="num">${dis[key].toFixed(dp)}</td>`;
-    if(calm){
-      const d = dis[key]-calm[key];
-      const pct = calm[key] ? ` (${d>=0?"+":""}${Math.round(d/calm[key]*100)}%)` : "";
-      html += `<td class="num ${d>0?"delta-up":d<0?"delta-down":""}">${d>=0?"+":""}${d.toFixed(dp)}${key==="time"?pct:""}</td>`;
-    }
-    html += `</tr>`;
+  // Summary table: size × condition (time), plus change vs none
+  const sm = summary();
+  let h = `<tr><th>Maze</th>${COND_ORDER.map(c=>`<th class="num"><span class="tag ${c}">${CONDS[c].short}</span></th>`).join("")}</tr>`;
+  for(const row of sm){
+    h += `<tr><td>${SIZES[row.size].label}</td>` + row.cells.map((v,j)=>{
+      if(v==null) return `<td class="num muted">—</td>`;
+      let d=""; if(j>0 && row.cells[0]!=null){ const diff=Math.round((v-row.cells[0])*10)/10 || 0; d=` <span class="small" style="color:${diff>0?'var(--warn)':'var(--good)'}">(${diff>=0?"+":""}${diff.toFixed(1)})</span>`; }
+      return `<td class="num">${v.toFixed(1)} s${d}</td>`;
+    }).join("") + `</tr>`;
   }
-  html += `<tr><td>Times you clicked the flashing button</td>${calm?"<td class='num'>—</td>":""}<td class="num">${dis.baitClicks}</td>${calm?"<td></td>":""}</tr>`;
-  $("resTable").innerHTML = html;
-  let msg = "";
-  if(calm){
-    const d = dis.time - calm.time;
-    msg = d > 0 ? `With distractions you took <b>${d.toFixed(1)} seconds longer</b> on a maze of identical difficulty.`
-                : `You were <b>${Math.abs(d).toFixed(1)} seconds faster</b> with distractions. Practice on the first maze may have helped — and notice how much effort it took to stay on track.`;
-  } else msg = `Shortest possible path was ${dis.optimal} moves.`;
-  $("resSummary").innerHTML = msg + ` <span class="muted">(Settings: ${n}×${n} maze, ${level} distraction level.)</span>`;
+  $("sumTable").innerHTML = h;
+  // All trials
+  let t = `<tr><th>#</th><th>Maze</th><th>Condition</th><th class="num">Time (s)</th><th class="num">Wall bumps</th><th class="num">Moves</th><th class="num">Extra moves</th><th class="num">Flashing-button clicks</th></tr>`;
+  S.results.forEach((r,i)=>{ t += `<tr><td>${i+1}</td><td>${SIZES[r.size].label}</td><td><span class="tag ${r.cond}">${CONDS[r.cond].short}</span></td><td class="num">${r.time.toFixed(1)}</td><td class="num">${r.bumps}</td><td class="num">${r.moves}</td><td class="num">${r.moves-r.optimal}</td><td class="num">${r.cond==="av"?r.baitClicks:"—"}</td></tr>`; });
+  $("resTable").innerHTML = t;
+  $("largeOffer").classList.toggle("hidden", S.trials.some(t=>t.size==="large"));
+  // Questions
+  if(!$("qs").children.length){
+    $("qs").innerHTML = QUESTIONS.map((q,i)=>`<label class="q" for="ans${i}">${i+1}. ${esc(q)}</label><textarea id="ans${i}" placeholder="Type your answer here…"></textarea>`).join("");
+    QUESTIONS.forEach((_,i)=>{ const ta=$("ans"+i); ta.addEventListener("input",()=>{ S.answers[i]=ta.value; save(); }); });
+  }
+  QUESTIONS.forEach((_,i)=>{ $("ans"+i).value = S.answers[i]||""; });
+  $("copyMsg").textContent="";
   show("results");
 }
 
-function resultsText(){
-  const calm = rounds.find(r=>!r.distracted), dis = rounds.find(r=>r.distracted);
-  const f = r => `${r.time.toFixed(1)} s, ${r.bumps} bumps, ${r.moves} moves (shortest ${r.optimal})`;
-  let t = `Distraction Maze results — ${n}x${n} maze, ${level} distraction level\n`;
-  if(calm) t += `Calm round: ${f(calm)}\n`;
-  t += `Distracted round: ${f(dis)}; clicked flashing button ${dis.baitClicks} time(s)\n`;
-  if(calm) t += `Time difference: ${(dis.time-calm.time>=0?"+":"")}${(dis.time-calm.time).toFixed(1)} s\n`;
-  const notes = $("notes").value.trim(); if(notes) t += `\nReflection:\n${notes}\n`;
-  return t;
+function exportPlain(){
+  const L=[]; const date=new Date().toLocaleString();
+  L.push("DISTRACTION MAZE — RESULTS", `Completed: ${date}   (distraction level: ${LEVEL})`, "");
+  L.push("Average time (seconds) by maze size and condition:");
+  for(const row of summary()) L.push(`  ${SIZES[row.size].label.padEnd(7)}  None: ${fmt(row.cells[0])}   Auditory: ${fmt(row.cells[1])}   Auditory + visual: ${fmt(row.cells[2])}`);
+  L.push("", "All trials:");
+  S.results.forEach((r,i)=> L.push(`  ${i+1}. ${SIZES[r.size].label} / ${CONDS[r.cond].label}: ${r.time.toFixed(1)} s, ${r.bumps} wall bumps, ${r.moves} moves (${r.moves-r.optimal} extra)${r.cond==="av"?`, clicked flashing button ${r.baitClicks}x`:""}`));
+  L.push("", "REFLECTION QUESTIONS");
+  QUESTIONS.forEach((q,i)=>{ L.push("", `${i+1}. ${q}`, `Answer: ${(S.answers[i]||"").trim() || "(no answer)"}`); });
+  return L.join("\n");
+  function fmt(v){ return v==null ? "—" : v.toFixed(1)+" s"; }
 }
+function exportHTML(){
+  const cell = "border:1px solid #999;padding:4px 8px;";
+  let h = `<h3>Distraction Maze — Results</h3><p>Completed: ${esc(new Date().toLocaleString())} (distraction level: ${LEVEL})</p>`;
+  h += `<p><strong>Average time (seconds) by maze size and condition</strong></p><table border="1" cellpadding="5" style="border-collapse:collapse"><tr><th style="${cell}">Maze</th>${COND_ORDER.map(c=>`<th style="${cell}">${CONDS[c].label}</th>`).join("")}</tr>`;
+  for(const row of summary()) h += `<tr><td style="${cell}">${SIZES[row.size].label}</td>${row.cells.map(v=>`<td style="${cell}text-align:right">${v==null?"—":v.toFixed(1)}</td>`).join("")}</tr>`;
+  h += `</table><p><strong>All trials</strong></p><table border="1" cellpadding="5" style="border-collapse:collapse"><tr>${["#","Maze","Condition","Time (s)","Wall bumps","Moves","Extra moves","Flashing-button clicks"].map(x=>`<th style="${cell}">${x}</th>`).join("")}</tr>`;
+  S.results.forEach((r,i)=>{ h += `<tr>${[i+1,SIZES[r.size].label,CONDS[r.cond].label,r.time.toFixed(1),r.bumps,r.moves,r.moves-r.optimal,r.cond==="av"?r.baitClicks:"—"].map((v,j)=>`<td style="${cell}${j>2?'text-align:right':''}">${v}</td>`).join("")}</tr>`; });
+  h += `</table><h3>Reflection questions</h3>`;
+  QUESTIONS.forEach((q,i)=>{ const a=(S.answers[i]||"").trim(); h += `<p><strong>${i+1}. ${esc(q)}</strong></p><p>${a? esc(a).replace(/\n/g,"<br>") : "<em>(no answer)</em>"}</p>`; });
+  return h;
+}
+function missingAnswers(){ return QUESTIONS.map((_,i)=>i+1).filter(i=>!(S.answers[i-1]||"").trim()); }
+
+$("copyBtn").onclick = async ()=>{
+  const plain = exportPlain(), html = exportHTML(), miss = missingAnswers(), msg=$("copyMsg");
+  const warn = miss.length ? ` Note: question${miss.length>1?"s":""} ${miss.join(", ")} ${miss.length>1?"are":"is"} still blank.` : "";
+  let ok=false;
+  try{
+    if(window.ClipboardItem && navigator.clipboard && navigator.clipboard.write){
+      await navigator.clipboard.write([new ClipboardItem({"text/html":new Blob([html],{type:"text/html"}),"text/plain":new Blob([plain],{type:"text/plain"})})]); ok=true;
+    }
+  }catch(e){}
+  if(!ok){ try{ await navigator.clipboard.writeText(plain); ok=true; }catch(e){} }
+  if(ok){ msg.className = miss.length?"small warn":"small ok"; msg.textContent = "✅ Copied! Now paste it into the Canvas assignment's Text Entry box." + warn; }
+  else { msg.className="small warn"; msg.textContent="Your browser blocked copying. Click Download results instead, then upload the file to the Canvas assignment using File Upload." + warn; }
+};
+$("dlBtn").onclick = ()=>{
+  try{
+    const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([exportPlain()],{type:"text/plain"}));
+    a.download="distraction-maze-results.txt"; document.body.appendChild(a); a.click(); a.remove();
+    const miss = missingAnswers();
+    $("copyMsg").className = miss.length?"small warn":"small ok";
+    $("copyMsg").textContent = "⬇️ Downloaded distraction-maze-results.txt. Upload it to the Canvas assignment using File Upload." + (miss.length ? ` Note: question${miss.length>1?"s":""} ${miss.join(", ")} ${miss.length>1?"are":"is"} still blank.` : "");
+  }catch(e){ $("copyMsg").className="small warn"; $("copyMsg").textContent="Download failed in this browser. Try another browser (Chrome, Edge, Firefox or Safari)."; }
+};
+$("addLargeBtn").onclick = ()=>{ for(const c of COND_ORDER) S.trials.push({size:"large",cond:c}); save(); showNext(); };
+let againArmed=false;
+$("againBtn").onclick = ()=>{
+  if(!againArmed){ againArmed=true; $("againConfirm").classList.remove("hidden"); setTimeout(()=>{againArmed=false;$("againConfirm").classList.add("hidden");},4000); return; }
+  clearSaved(); S=null; againArmed=false; $("againConfirm").classList.add("hidden"); $("qs").innerHTML=""; initIntro();
+};
 
 /* ---------- Distractions ---------- */
 const Distractions = (function(){
@@ -352,28 +459,24 @@ const Distractions = (function(){
 
   function later(fn, ms){ const id=setTimeout(()=>{ timers=timers.filter(t=>t!==id); if(running) fn(); }, ms); timers.push(id); }
   function loop(range, fn){ if(!range) return; const go=()=>{ fn(); later(go, between(range)); }; later(go, between(range)*0.6); }
-  function audio(key, vol, loopIt){
-    if(!AUDIO[key]) return null;
-    const a=new Audio(AUDIO[key]); a.volume=vol; a.loop=!!loopIt; a.play().catch(()=>{}); return a;
-  }
+  function audio(key, vol, loopIt){ if(!AUDIO[key]) return null; const a=new Audio(AUDIO[key]); a.volume=vol; a.loop=!!loopIt; a.play().catch(()=>{}); return a; }
   function ding(){
     try{
       const AC=window.AudioContext||window.webkitAudioContext; if(!AC) return;
-      ding.ctx = ding.ctx || new AC(); const c=ding.ctx, o=c.createOscillator(), g=c.createGain();
+      ding.ctx = ding.ctx || new AC(); const c=ding.ctx; if(c.state==="suspended") c.resume();
+      const o=c.createOscillator(), g=c.createGain();
       o.type="sine"; o.frequency.setValueAtTime(880,c.currentTime); o.frequency.setValueAtTime(1320,c.currentTime+0.09);
       g.gain.setValueAtTime(0.0001,c.currentTime); g.gain.exponentialRampToValueAtTime(0.18*cfg.clip,c.currentTime+0.02); g.gain.exponentialRampToValueAtTime(0.0001,c.currentTime+0.35);
       o.connect(g).connect(c.destination); o.start(); o.stop(c.currentTime+0.4);
     }catch(e){}
   }
-
   function spawnShape(){
     const el=document.createElement("div"); el.className="shape";
     const size=randi(30,80), color=pick(COLORS), type=pick(["oval","rect","tri"]);
     if(type==="tri"){ el.style.width=el.style.height="0"; el.style.borderLeft=el.style.borderRight=`${size/2}px solid transparent`; el.style.borderBottom=`${size*0.87}px solid ${color}`; }
     else { el.style.width=el.style.height=size+"px"; el.style.background=color; el.style.borderRadius = type==="oval"?"50%":"6px"; }
     fx.appendChild(el);
-    const s={el, x:rand(0,innerWidth-size), y:rand(0,innerHeight-size), vx:rand(1,3)*pick([-1,1]), vy:rand(1,3)*pick([-1,1]), size, rot:0, vr:type==="oval"?0:rand(-3,3), born:performance.now(), life:rand(8000,12000)};
-    shapes.push(s);
+    shapes.push({el, x:rand(0,innerWidth-size), y:rand(0,innerHeight-size), vx:rand(1,3)*pick([-1,1]), vy:rand(1,3)*pick([-1,1]), size, rot:0, vr:type==="oval"?0:rand(-3,3), born:performance.now(), life:rand(8000,12000)});
   }
   function tick(){
     const now=performance.now();
@@ -403,13 +506,13 @@ const Distractions = (function(){
   }
   function sound(){ clips.push(audio(pick(["1","2","3","4","5","7"]), cfg.clip)); clips=clips.filter(Boolean).slice(-4); }
   function bait(){
-    if(document.getElementById("bait")) return;
+    if($("bait")) return;
     const b=document.createElement("button"); b.id="bait"; b.textContent=pick(["✨ Click for a surprise!","🎁 You have a reward!","👀 Don't click this","🔥 Trending now"]);
     b.style.left=rand(20, innerWidth-240)+"px"; b.style.top=rand(80, innerHeight-120)+"px";
     b.onclick=()=>{ stats.baitClicks++; b.remove();
       const p=document.createElement("div"); p.id="baitPop";
       p.innerHTML=`<b>Fun fact!</b><p>${pick(FACTS)}</p><button class="btn ghost">OK</button>`;
-      document.body.appendChild(p); p.querySelector("button").onclick=()=>{p.remove(); $("maze").focus({preventScroll:true});};
+      document.body.appendChild(p); p.querySelector("button").onclick=()=>{p.remove(); canvas.focus({preventScroll:true});};
     };
     document.body.appendChild(b); setTimeout(()=>b.remove(), 6000);
   }
@@ -418,14 +521,17 @@ const Distractions = (function(){
     t.innerHTML="<span>📣 Don't forget: assignment due Friday · Lunch menu: tacos · Club sign-ups close today · Did you charge your laptop? · Pep rally after 5th period · Lost & found is overflowing ·</span>";
     document.body.appendChild(t);
   }
+  // Auditory-only: a beep instead of a visible notification.
+  function audioPing(){ ding(); }
 
   return {
-    start(c){
+    start(c, mode){
       cfg=c; running=true;
       later(()=>{
         narr = audio("na", cfg.narr, true);
-        loop(cfg.shape, spawnShape); spawnShape(); anim=requestAnimationFrame(tick);
         loop(cfg.sound, sound);
+        if(mode==="audio"){ loop(cfg.toast, audioPing); return; }
+        loop(cfg.shape, spawnShape); spawnShape(); anim=requestAnimationFrame(tick);
         loop(cfg.toast, toast); later(toast, 1200);
         loop(cfg.thought, thought);
         loop(cfg.bait, bait);
@@ -436,7 +542,7 @@ const Distractions = (function(){
       running=false; timers.forEach(clearTimeout); timers=[]; cancelAnimationFrame(anim);
       if(narr){narr.pause(); narr=null;} clips.forEach(a=>a&&a.pause()); clips=[];
       shapes.forEach(s=>s.el.remove()); shapes=[]; fx.innerHTML=""; toastBox.innerHTML="";
-      for(const id of ["bait","baitPop","ticker"]){ const e=document.getElementById(id); if(e) e.remove(); }
+      for(const id of ["bait","baitPop","ticker"]){ const e=$(id); if(e) e.remove(); }
     }
   };
 })();
@@ -459,23 +565,34 @@ canvas.addEventListener("touchend",e=>{
 });
 window.addEventListener("resize",()=>{ if(!$("game").classList.contains("hidden")) fitCanvas(); });
 
-/* ---------- Buttons ---------- */
-$("startBtn").onclick=()=>{
-  n=SIZES[$("optSize").value]; level=$("optLevel").value; skipCalm=$("optSkipCalm").checked; rounds=[]; baseMaze=null;
-  // Unlock audio on this user gesture (required by browsers, esp. iOS)
-  try{ const a=new Audio(AUDIO["5"]); a.volume=0; a.play().then(()=>a.pause()).catch(()=>{}); }catch(e){}
-  startRound(skipCalm?2:1);
+/* ---------- Start / resume ---------- */
+function unlockAudio(){ try{ const a=new Audio(AUDIO["5"]); a.volume=0; a.play().then(()=>a.pause()).catch(()=>{}); }catch(e){} }
+function initIntro(){
+  const saved = load();
+  const hasSaved = saved && saved.results && (saved.results.length>0 || (saved.answers||[]).some(Boolean));
+  $("resumeBtn").classList.toggle("hidden", !hasSaved);
+  $("restartBtn").classList.toggle("hidden", !hasSaved);
+  $("startBtn").classList.toggle("hidden", !!hasSaved);
+  $("resumeNote").classList.toggle("hidden", !hasSaved);
+  if(hasSaved){
+    const done = saved.results.length, total = saved.trials.length;
+    $("resumeNote").textContent = done>=total ? "You've already finished all trials. Resume to see your results and reflection answers."
+                                              : `You've completed ${done} of ${total} trials. Resume to continue where you left off.`;
+  }
+  refreshIntroPlan(); show("intro");
+}
+$("startBtn").onclick = ()=>{
+  unlockAudio();
+  S = {trials:buildTrials($("optLarge").checked), results:[], mazes:{}, answers:[], level:LEVEL};
+  save(); showNext();
 };
-$("round2Btn").onclick=()=>startRound(2);
-$("againBtn").onclick=()=>show("intro");
-$("copyBtn").onclick=async()=>{
-  const text=resultsText();
-  try{ await navigator.clipboard.writeText(text); $("copyMsg").textContent="Copied! Paste it into your assignment."; }
-  catch(e){ $("notes").value = text + "\n" + $("notes").value; $("notes").select(); $("copyMsg").textContent="Your browser blocked copying — results were added to the box above; select and copy them."; }
-};
+$("resumeBtn").onclick = ()=>{ unlockAudio(); S = load(); S.answers = S.answers||[]; showNext(); };
+$("restartBtn").onclick = ()=>{ clearSaved(); initIntro(); };
+$("trialBtn").onclick = ()=>{ unlockAudio(); startTrial(); };
+initIntro();
 
 // test hook
-window.__maze = { get state(){ return {maze, player, n, round, playing, stats, rounds}; }, move };
+window.__maze = { get state(){ return {maze, player, n, playing, stats, S}; }, move, exportPlain, exportHTML };
 })();
 </script>
 </body>
