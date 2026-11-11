@@ -2,7 +2,7 @@
 
 A browser-based classroom activity. Students solve two mazes of equal difficulty, first in calm and then with distractions (sounds, pop-up notifications, moving shapes and stray "thoughts"). They then compare their results and reflect on how distraction affected their focus.
 
-**▶️ Play it:** https://YOUR-USERNAME.github.io/distraction-maze/
+**▶️ Play it:** https://jon-dyhr.github.io/distraction-maze/
 
 **📓 Open the notebook version in Google Colab:**
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/YOUR-USERNAME/distraction-maze/blob/main/Distraction_Maze.ipynb)
@@ -30,14 +30,14 @@ Add these to the end of the link to choose the settings for your class:
 | `lock` | `1` stops students changing the settings | `?lock=1` |
 
 Combine them with `&`, for example:
-`https://YOUR-USERNAME.github.io/distraction-maze/?size=medium&level=high&lock=1`
+`https://jon-dyhr.github.io/distraction-maze/?size=medium&level=high&lock=1`
 
 ### Embed it in a Canvas page
 
 In the Canvas page editor, switch to the HTML editor and paste:
 
 ```html
-<iframe src="https://YOUR-USERNAME.github.io/distraction-maze/?size=medium&level=medium"
+<iframe src="https://jon-dyhr.github.io/distraction-maze/?size=medium&level=medium"
         width="100%" height="900" style="border:0;"
         allow="autoplay; clipboard-write" allowfullscreen
         title="Distraction Maze"></iframe>
